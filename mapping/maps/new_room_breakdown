@@ -1,3 +1,4 @@
+
 Since the world file is now turtlebot3_house.world the room breakdwon is different.
 If you looks at the .pgm file you will see the map of the house. We will be breaking the
 house into four rooms still, but the rooms will now be grouped since there are six total. 
