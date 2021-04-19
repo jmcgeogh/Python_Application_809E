@@ -1,0 +1,88 @@
+#!/usr/bin/env python
+
+import rospy
+from std_srvs.srv import Empty, EmptyRequest
+from geometry_msgs.msg import PoseWithCovarianceStamped
+from location_recorder.srv import RoomPose
+import sys
+
+def service_callback(request):
+    request = str(request)[13:]
+    request = request[:-1]
+    positions = {'x: ' : pos_x, 'y: ' : pos_y, 'z: ' : pos_z}
+    orientations = {'x: ' : orn_x, 'y: ' : orn_y, 'z: ' : orn_z, 'w: ' : orn_w}
+    file = open('/home/elliottmcg/catkin_ws1/src/location_recorder/records/location_recorder.yaml', 'a')
+    file.write(request + ':' + '\n')
+    file.write('\t' + 'position:' + '\n')
+    for key, value in positions.items():
+        file.write('\t' + '\t' + str(key) + str(value) + '\n')
+    file.write('\t' + 'orientation:' + '\n')
+    for key, value in orientations.items():
+        file.write('\t' + '\t' + str(key) + str(value) + '\n')
+    return "Robot location saved."
+
+def sub_callback(msg):
+    global pos_x, pos_y, pos_z, orn_x, orn_y, orn_z, orn_w
+    pos_x = msg.pose.pose.position.x
+    pos_y = msg.pose.pose.position.y
+    pos_z = msg.pose.pose.position.z
+    orn_x = msg.pose.pose.orientation.x
+    orn_y = msg.pose.pose.orientation.y
+    orn_z = msg.pose.pose.orientation.z
+    orn_w = msg.pose.pose.orientation.w
+    return pos_x, pos_y, pos_z, orn_x, orn_y, orn_z, orn_w
+
+if __name__ == "__main__":
+    rospy.init_node('room_recorder')
+    robot_pose = PoseWithCovarianceStamped()
+    robot_pose = rospy.Subscriber('/amcl_pose', PoseWithCovarianceStamped, sub_callback)
+
+    my_service = rospy.Service('/room_service', RoomPose, service_callback)
+    rospy.wait_for_service('/room_service')
+    get_pose_client = rospy.ServiceProxy('/room_service', Empty)
+    get_pose_request_object = EmptyRequest()
+
+    rospy.spin()
+#from location_recorder.srv import RoomPose
+#from location_recorder.srv import RoomPoseResponse
+#import sys
+#import rospy
+#import amcl
+
+#def room_pose_client(room_label):
+#    rospy.wait_for_service("room_service")
+#    try:
+#        room_pose = rospy.ServiceProxy("room_service", RoomPose)  # responsible of sending the request
+#        response = room_pose(room_label)
+#        return response.result
+#    except rospy.ServiceException as exception:
+#        rospy.logerr("Service call failed {e}".format(e=exception))
+#        sys.exit(1)
+
+#def usage():
+#    """If the user does not use the correct arguments"""
+#    # rospy.loginfo("{0} first_number second_number".format(sys.argv[0]))
+#    rospy.loginfo("{0} room_label".format(sys.argv[0]))
+
+#def callback(req):
+#    rospy.loginfo("Returning [{a} + {b} = {c}]".format(a=req.a, b=req.b, c=req.a+req.b))
+#    return RoomPoseResponse(req.a+req.b)  # send the response to the client
+
+#def room_pose_server():
+#    rospy.init_node("room_pose_server")
+#    # Create the server that listens to the request
+#    rospy.Service("room_service", RoomPose, callback)
+#    rospy.loginfo("I am waiting for requests...")
+#   rospy.spin()
+
+
+#if __name__ == "__main__":
+#    room_pose_server()
+#    if len(sys.argv) == 2:
+#        lable = str(sys.argv[1])
+#    else:
+#        usage()
+#        sys.exit(1)
+
+#    print("Requesting {0} pose".format(lable))
+#    print("Entry saved in file".format(lable, room_pose_client(lable)))
