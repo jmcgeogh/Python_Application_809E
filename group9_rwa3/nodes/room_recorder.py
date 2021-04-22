@@ -12,11 +12,15 @@ def service_callback(request):
     The position and orientation values are called and used to create/edit the .yaml file.
 
     """
+    # Get the room name input
     request = str(request)[13:]
     request = request[:-1]
+    # Store the position and orientation of the bot
     positions = {'x: ': pos_x, 'y: ': pos_y, 'z: ': pos_z}
     orientations = {'x: ': orn_x, 'y: ': orn_y, 'z: ': orn_z, 'w: ': orn_w}
+    # Create/open the .yaml file to edit
     file = open('/home/elliottmcg/catkin_ws1/src/group9_rwa3/records/location_recorder.yaml', 'a')
+    # Write the room name, the position, and orientation of the robot
     file.write(request + ':' + '\n')
     space = ' '*4
     file.write(space + 'position:' + '\n')
@@ -25,6 +29,7 @@ def service_callback(request):
     file.write(space + 'orientation:' + '\n')
     for key, value in orientations.items():
         file.write(space + space + str(key) + str(value) + '\n')
+    # Inform the user that the information has been saved
     return "Robot location saved."
 
 
@@ -34,7 +39,7 @@ def sub_callback(msg):
     Reference /amcl_pose to get the position and orientation values.
 
     """
-
+    # Get the position and orientation of the bot from the /amcl_pose topic
     global pos_x, pos_y, pos_z, orn_x, orn_y, orn_z, orn_w
     pos_x = msg.pose.pose.position.x
     pos_y = msg.pose.pose.position.y
@@ -46,6 +51,7 @@ def sub_callback(msg):
     return pos_x, pos_y, pos_z, orn_x, orn_y, orn_z, orn_w
 
 
+# Create the room_service rosservice and execute room information storage
 if __name__ == "__main__":
     rospy.init_node('room_recorder')
     robot_pose = PoseWithCovarianceStamped()
